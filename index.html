@@ -61,7 +61,7 @@ input[type=number],input[type=search],textarea,select{width:100%;border:1px soli
 .hint{font-size:12px;color:var(--muted)}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-nav.tabs .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
 nav.tabs button{border:0;background:none;padding:10px 4px 12px;font-size:13px;color:var(--muted);cursor:pointer;display:grid;justify-items:center;gap:2px}
 nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
 nav.tabs button[aria-selected="true"]{color:var(--ink);font-weight:700}
@@ -204,21 +204,7 @@ th.ltc{color:var(--ltc)} th.dis{color:var(--dis)}
     <div class="tablewrap"><table id="cmpTable"></table></div>
   </section>
 
-  <!-- AI -->
-  <section class="view" id="v-ai" hidden>
-    <h2>問 Claude</h2>
-    <div class="notice" id="aiNote">用白話問，例如「一般戶阿嬤同時有身障證明和長照第三類，想買輕量化輪椅 6,000 元，哪個補助多？」Claude 只會依兩份法規表格的資料回答，並列出碼別、項次與頁碼。答案用的是你在上方設定的身分。</div>
-    <div class="chat" id="chat"></div>
-    <div class="composer" id="composer">
-      <label for="ask" class="hint">你的問題</label>
-      <textarea id="ask" rows="3" placeholder="例：只符合長照的民眾要電動輪椅，可以買嗎？每月補助多少？"></textarea>
-      <div class="btns">
-        <button class="btn" id="send">送出</button>
-        <button class="btn ghost" id="stop" hidden>停止</button>
-        <button class="btn ghost" id="clear">清除對話</button>
-      </div>
-    </div>
-  </section>
+
 
   <!-- 規定 -->
   <section class="view" id="v-rules" hidden></section>
@@ -227,7 +213,7 @@ th.ltc{color:var(--ltc)} th.dis{color:var(--dis)}
 <nav class="tabs" aria-label="主要功能"><div class="in" role="tablist">
   <button role="tab" data-t="find" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>查詢試算</button>
   <button role="tab" data-t="cmp" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h7v13H4zM13 6h7v13h-7z"/></svg>兩制對照</button>
-  <button role="tab" data-t="ai" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>問 Claude</button>
+
   <button role="tab" data-t="rules" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>規定重點</button>
 </div></nav>
 
@@ -555,7 +541,7 @@ let current = 'find';
 document.querySelector('nav.tabs').addEventListener('click', e=>{
   const b = e.target.closest('button[data-t]'); if(!b) return; current = b.dataset.t;
   document.querySelectorAll('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', String(x===b)));
-  for (const t of ['find','cmp','ai','rules']) document.getElementById('v-'+t).hidden = t!==current;
+  for (const t of ['find','cmp','ai','rules']) { const el=document.getElementById('v-'+t); if (el) el.hidden = t!==current; }
   try{ localStorage.setItem('aid-tab', current); }catch(e){}
   window.scrollTo(0,0);
 });
@@ -635,16 +621,19 @@ function disableAI(msg){
   if (msg){ n.textContent = msg; return; }
   n.innerHTML = '這個版本不能直接問 Claude。要用白話提問，請開啟 Claude 版（需登入 claude.ai 帳號），那裡的「問 Claude」分頁會依同一份法規資料回答並標出處。<p style="margin:10px 0 0"><a class="btn" style="display:inline-block;text-decoration:none" href="'+ARTIFACT_URL+'" target="_blank" rel="noopener">開啟 Claude 版問問題</a></p>';
 }
+if (document.getElementById('composer')) {
 document.getElementById('send').onclick = ask;
 document.getElementById('ask').addEventListener('keydown', e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) ask(); });
 document.getElementById('stop').onclick = ()=>ctl?.abort();
 document.getElementById('clear').onclick = ()=>{ turns=[]; chatEl.innerHTML=''; };
 (async()=>{
+  if (!document.getElementById('composer')) return;
   if (!window.claude?.use){ disableAI(); return; }
   try { sample = await window.claude.use('sample'); } catch(e){ sample=null; }
   if (!sample){ disableAI(); return; }
   try { const lim = await sample.limits(); if (!lim.tools) disableAI('此檢視無法使用查表工具，請用其他三個分頁。'); } catch(e){}
 })();
+}
 
 // ---------- boot ----------
 syncSettings(); renderCmp(); renderRules();

@@ -1,5 +1,5 @@
-// 版本 b351c3dc80 — 每次重新組裝會變，手機有網路時會自動抓新版
-const CACHE='aid-b351c3dc80';
+// 版本 2a5451ee7f — 每次重新組裝會變，手機有網路時會自動抓新版
+const CACHE='aid-2a5451ee7f';
 const CORE=['./','index.html','manifest.json','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
